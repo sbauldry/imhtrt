@@ -217,7 +217,6 @@ lab var com "w1 community type"
 rename (w2weight w2psu w2stratum) (wgt psu str)
 
 * set analysis sample, keep analysis variables, and save data
-drop if mi(tdis)
 drop if mi(native, origin)
 drop if origin == 7
 
