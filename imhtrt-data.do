@@ -20,7 +20,8 @@ save `d1', replace
 use IDNUM DEP12ROBSI DYSROSI12 W2PANDX12 PANADX12 AGORADX12 SOCDX12 SPEC12  ///
     GENDX12 HYPO12 W2S4AQ29A W2S4BQ18A W2S5Q27 W2S6Q31A W2S7Q38A W2S8Q34    ///
 	W2S9Q26 W2S1Q2BR W2S1Q2AR W2S1Q2C W2S2DQ1* W2S2DQ6* W2S2DQ8* W2S2DQ2*   ///
-	W2S2DQ9* W2S2DQ3A* W2S2DQ10A* W2AGE W2WEIGHT W2PSU W2STRATUM            ///
+	W2S2DQ9* W2S2DQ3A* W2S2DQ10A* W2AGE W2WEIGHT W2PSU W2STRATUM W2S1Q2D    ///
+	W2S1Q2E ///
 	using "~/Dropbox/Research/Data/NESARC/Stata/NESARC Wave 2 Data", replace
 	
 rename _all, lower
@@ -28,6 +29,7 @@ recode w2s4aq29a w2s4bq18a w2s5q27 w2s6q31a w2s7q38a w2s8q34 w2s9q26   ///
        w2s1q2br w2s2dq1* w2s2dq6* w2s2dq8* w2s2dq2* w2s2dq9* w2s2dq3a* ///
 	   w2s2dq10a* (9 = .)
 recode w2s1q2ar w2s1q2c (99 = .)
+recode w2s1q2d w2s1q2e (999 = .)
 
 
 *** merge 2 waves of data
@@ -86,22 +88,30 @@ lab var dis "w2 any disorder past year"
 lab var tdis "w2 sought help any disorder past year"
 
 * nativity and origin
-gen native = (s1q1f == 1) if !mi(s1q1f)
-replace native = (w2s1q2br == 1) if mi(native)
-lab var native "born in US"
+gen mnat = (w2s1q2d == 10) if !mi(w2s1q2d)
+gen fnat = (w2s1q2e == 10) if !mi(w2s1q2e)
+
+gen     nat = 3 if s1q1f != 1 & !mi(s1q1f)
+replace nat = 3 if w2s1q2br != 1 & mi(nat)
+replace nat = 2 if ( mnat != 1 | fnat != 1 ) & mi(nat)
+replace nat = 1 if s1q1f == 1 & mi(nat)
+replace nat = 1 if w2s1q2br == 1 & mi(nat)
+lab def nt 1 "born in US" 2 "2nd gen immigrant" 3 "1st gen immigrant"
+lab val nat nt
+lab var nat "w1 nativity status"
 
 replace s1q1e = w2s1q2ar if mi(s1q1e)
 recode s1q1e (5 6 12/15 17/20 22 27 29 37 38 40 41 44/46 50 51 55 58 = 1) ///
              (1 2 54 = 2) (10 16 21 23 24 30 32 34 42 47 49 52 57 = 3) ///
              (9 35 36 8 11 43 53 = 4) (39 = 5) ///
-			 (3 4 7 25 26 28 31 33 48 56 98 = 7), gen(origin)
-replace origin = 1 if ethrace2a == 1 & mi(origin)
-replace origin = 2 if ethrace2a == 2 & mi(origin)
-replace origin = 7 if ethrace2a == 3 & mi(origin)
-replace origin = 3 if ethrace2a == 4 & mi(origin)
+			 (3 4 7 25 26 28 31 33 48 56 98 = 7), gen(ori)
+replace ori = 1 if ethrace2a == 1 & mi(ori)
+replace ori = 2 if ethrace2a == 2 & mi(ori)
+replace ori = 7 if ethrace2a == 3 & mi(ori)
+replace ori = 3 if ethrace2a == 4 & mi(ori)
 lab def or 1 "Eu" 2 "Af" 3 "As" 4 "Hi" 5 "PR" 7 "Ot"
-lab val origin or
-lab var origin "national origin"
+lab val ori or
+lab var ori "w1 national origin"
 
 * acculturation indicators
 gen yus = w2s1q2c
@@ -140,9 +150,9 @@ lab var ai6 "w2 ethnicity proud of heritage"
 lab var ai7 "w2 ethnicity background important in interaction"
 lab var ai8 "w2 ethnicity shared values, attitudes, and behaviors"
 
-alpha al* if !native, gen(sal)
-alpha as* if !native, gen(sas)
-alpha ai* if !native, gen(sai)
+alpha al* if nat > 1, gen(sal)
+alpha as* if nat > 1, gen(sas)
+alpha ai* if nat > 1, gen(sai)
 lab var sal "w2 acculturation language scale"
 lab var sas "w2 acculturation social preferences scale"
 lab var sai "w2 acculturation identity scale"
@@ -159,7 +169,7 @@ lab var pd4 "w2 discrimination in any situation"
 lab var pd5 "w2 called a racist name"
 lab var pd6 "w2 made fun of"
 
-alpha pd*  if !native, gen(spd)
+alpha pd*  if nat > 1, gen(spd)
 lab var spd "w2 perceived discrimination scale"
 	
 * sociodemographics
@@ -217,12 +227,12 @@ lab var com "w1 community type"
 rename (w2weight w2psu w2stratum) (wgt psu str)
 
 * set analysis sample, keep analysis variables, and save data
-drop if mi(native, origin)
-drop if origin == 7
+drop if mi(ori)
+drop if ori == 7
 
-order idnum mde dys man pan pag ago soc spp gad tmde tdys tman tpan tsoc   ///
-      tspp tgad mood anx dis tmood tanx tdis native origin yus al* as* ai* ///
-	  sal sas sai pd* spd age fem mar chd edu wrk inc ins reg com wgt psu str
+order idnum mde dys man pan pag ago soc spp gad tmde tdys tman tpan tsoc ///
+      tgad mood anx dis tmood tanx tdis nat ori yus al* as* ai* sal sas  ///
+	  sai pd* spd age fem mar chd edu wrk inc ins reg com wgt psu str
 keep idnum-str
 
 save "~/Documents/Projects/imhtrt/imhtrt-data", replace
