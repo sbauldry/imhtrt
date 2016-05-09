@@ -59,27 +59,30 @@ graph combine "`g1'" "`g2'" "`g3'" "`g4'", scheme(lean2)
 
 *** Distributions of nativity and national origin
 foreach x in mood anx {
-	tab origin native if `x'
+	tab ori nat if `x'
 }
 
 
 *** Indicators of acculturation and perceived discrimination
 tempfile g1 g2 g3 g4 g5
-graph box yus if !native & dis, scheme(lean2) saving(`g1', replace)
+graph box yus if nat == 3 & dis, scheme(lean2) saving(`g1', replace)
 
-graph box al* if !native & dis, scheme(lean2) legend(off) tit("language") ///
+graph box al* if nat > 1 & dis, scheme(lean2) legend(off) tit("language") ///
   saving(`g2', replace)
   
-graph box as* if !native & dis, scheme(lean2) legend(off) tit("social") ///
+graph box as* if nat > 1 & dis, scheme(lean2) legend(off) tit("social") ///
   saving(`g3', replace)
   
-graph box ai* if !native & dis, scheme(lean2) legend(off) tit("identity") ///
+graph box ai* if nat > 1 & dis, scheme(lean2) legend(off) tit("identity") ///
   saving(`g4', replace)
   
-graph box pd* if !native & dis, scheme(lean2) legend(off) ///
+graph box pd* if nat > 1 & dis, scheme(lean2) legend(off) ///
   tit("discrimination") saving(`g5', replace)
 
 graph combine "`g1'" "`g2'" "`g3'" "`g4'" "`g5'", scheme(lean2) rows(3)
+
+
+*** Distribution 
 
 
 
