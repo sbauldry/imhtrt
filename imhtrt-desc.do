@@ -82,13 +82,47 @@ graph box pd* if nat > 1 & dis, scheme(lean2) legend(off) ///
 graph combine "`g1'" "`g2'" "`g3'" "`g4'" "`g5'", scheme(lean2) rows(3)
 
 
-*** Distribution 
+*** Distributions of other covariates
+qui sum dis
+gen frac = 1/r(sum)
+lab def s 0 "M" 1 "F"
+lab val fem s
+
+tempfile g1 g2 g3 g4 g5 g6 g7 g8 g9
+hist age if dis, scheme(lean2) tit("age") saving(`g1', replace)
+
+graph bar (sum) frac if dis, over(fem) scheme(lean2) ylab(0(.2)1) ///
+  ytit("proportion") tit("sex") saving(`g2', replace)
+  
+graph bar (sum) frac if dis, over(mar) scheme(lean2) ylab(0(.2)1) ///
+  ytit("proportion") tit("marital status") saving(`g3', replace)
+  
+graph bar (sum) frac if dis, over(chd) scheme(lean2) ylab(0(.2)1) ///
+  ytit("proportion") tit("child") saving(`g4', replace)
+  
+hist edu if dis, scheme(lean2) discrete tit("education") saving(`g5', replace)
+  
+graph bar (sum) frac if dis, over(wrk) scheme(lean2) ylab(0(.2)1) ///
+  ytit("proportion") tit("work status") saving(`g6', replace)
+  
+graph bar (sum) frac if dis, over(ins) scheme(lean2) ylab(0(.2)1) ///
+  ytit("proportion") tit("insurance") saving(`g7', replace)
+  
+graph bar (sum) frac if dis, over(reg) scheme(lean2) ylab(0(.2)1) ///
+  ytit("proportion") tit("region") saving(`g8', replace)
+  
+graph bar (sum) frac if dis, over(com) scheme(lean2) ylab(0(.2)1) ///
+  ytit("proportion") tit("community") saving(`g9', replace)
+  
+graph combine "`g1'" "`g2'" "`g3'" "`g4'" "`g5'" "`g6'" "`g7'" "`g8'" ///
+  "`g9'", scheme(lean2)
+  
 
 
 
 
 
-*** Table 1. Distribution of disorders and mental health care
+/*** Table 1. Distribution of disorders and mental health care
 foreach x in mdd anx sub dis {
 	qui sum `x'2, detail
 	local n1 = r(sum)
@@ -120,3 +154,4 @@ qui tab reg1, gen(r)
 qui tab com1, gen(c)
 
 bysort native: sum age2 female1 m1-m4 child1 e1-e4 w1-w3 inc1 i1-i4 r1-r4 c1-c3
+*/
