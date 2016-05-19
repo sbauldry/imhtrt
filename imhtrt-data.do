@@ -179,8 +179,8 @@ lab var age "w2 age"
 gen fem = (sex == 2)
 lab var fem "w1 female"
 
-recode marital (6 = 0) (3/5 = 2) (2 = 3) (1 = 4), gen(mar)
-lab def mr 0 "nev" 2 "pre" 3 "coh" 4 "mar", replace
+recode marital (6 = 1) (3/5 = 2) (2 = 3) (1 = 4), gen(mar)
+lab def mr 1 "nev" 2 "pre" 3 "coh" 4 "mar", replace
 lab val mar mr
 lab var mar "w1 marital status"
 

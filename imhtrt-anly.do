@@ -4,7 +4,6 @@
 
 use "~/Documents/Projects/imhtrt/imhtrt-data", replace
 
-
 *** Analysis 1: treatment disparities
 eststo clear
 foreach x in mood anx {
@@ -38,23 +37,129 @@ foreach x in mood anx {
 	}
 }
 
+* view results
 esttab mood1 mood2 mood30 mood31, eform keep(2.nat 3.nat) nogaps se nonum ///
-  stats(N diff_p) mtit("biv" "adj" "male" "female") tit("mood disorders")
+  stats(N r2_p diff_p) mtit("biv" "adj" "male" "female") tit("mood")
 
 esttab mood41 mood42 mood43 mood44 mood45, eform keep(2.nat 3.nat) nogaps se ///
-  nonum stats(N diff_p) mtit("eu" "af" "as" "hi" "pr") tit("mood disorders")
+  nonum stats(N r2_p diff_p) mtit("eu" "af" "as" "hi" "pr") tit("mood")
   
 esttab anx1 anx2 anx30 anx31, eform keep(2.nat 3.nat) nogaps se nonum ///
-  stats(N diff_p) mtit("biv" "adj" "male" "female") tit("anxiety disorders")
+  stats(N r2_p diff_p) mtit("biv" "adj" "male" "female") tit("anxiety")
 
 esttab anx41 anx42 anx43 anx44 anx45, eform keep(2.nat 3.nat) nogaps se ///
-  nonum stats(N diff_p) mtit("eu" "af" "as" "hi" "pr") tit("anxiety disorders")
+  nonum stats(N r2_p diff_p) mtit("eu" "af" "as" "hi" "pr") tit("anxiety")
+
+* output tables for excel
+esttab mood1 mood2 mood30 mood31 mood41 mood42 mood43 mood44 mood45           ///
+  using ~/desktop/tab2a.csv, replace plain eform nogaps ci(%9.2f) b(%9.2f)    ///
+  stats(N r2_p diff_p) mtit("biv" "adj" "mal" "fem" "eu" "af" "as" "hi" "pr") ///
+  tit("mood disorders")
+
+esttab anx1 anx2 anx30 anx31 anx41 anx42 anx43 anx44 anx45                    ///
+  using ~/desktop/tab2b.csv, replace plain eform nogaps ci(%9.2f) b(%9.2f)    ///
+  stats(N r2_p diff_p) mtit("biv" "adj" "mal" "fem" "eu" "af" "as" "hi" "pr") /// 
+  tit("anxiety disorders")
  
 
-* figure of predicted probabilities
+* program to calculate predicted probabilities
+capture program drop fig1est
+program fig1est
+	args dis fem ori sam
+	
+	if (`fem' == . & `ori' == .) {
+		qui logit t`dis' i.nat age fem i.ori i.mar chd edu i.wrk i.ins i.reg ///
+			i.com [pw = wgt] if `dis', vce(robust)
+	}
+	else if (`fem' != . & `ori' == .) {
+		qui logit t`dis' i.nat age fem i.ori i.mar chd edu i.wrk i.ins i.reg ///
+			i.com [pw = wgt] if `dis' & fem == `fem', vce(robust)
+	}
+	else if (`fem' == . & `ori' != .) {
+		qui logit t`dis' i.nat age fem i.ori i.mar chd edu i.wrk i.ins i.reg ///
+			i.com [pw = wgt] if `dis' & ori == `ori', vce(robust)
+	}
+	
+	qui margins i.nat
+	mat b = r(b)
+	mat V = r(V)
+
+	forval i = 1/3 {
+		post pf ("`dis'") (`sam') (`i') (b[1,`i']) (V[`i',`i'])
+	}
+end
+
+* storing predicted probabilities
+postutil clear
+tempfile pp
+postfile pf str4 dis sam nat p v using `pp', replace
+
+foreach x in mood anx {
+	fig1est `x' . . 1
+	fig1est `x' 0 . 2.5
+	fig1est `x' 1 . 3.5
+	fig1est `x' . 1 5
+	fig1est `x' . 2 6
+	fig1est `x' . 3 7
+	fig1est `x' . 4 8
+	fig1est `x' . 5 9
+}
+
+postclose pf
+
+* creating graph
+preserve
+use `pp', replace
+
+gen ub = p + 1.96*sqrt(v)
+gen lb = p - 1.96*sqrt(v)
+replace lb = 0 if lb < 0
+
+bysort dis sam: gen tag = (_n == 1)
+gen id = sum(tag)
+
+replace sam = sam + .2 if nat == 2
+replace sam = sam + .4 if nat == 3
+
+drop tag v
+reshape wide sam p ub lb, i(id) j(nat)
+
+tempfile g1 g2
+graph twoway ///
+	(scatter p1 sam1, msymbol(T) msize(medium) mcolor(black))             ///
+	(rcap    ub1 lb1 sam1, lc(black) lw(thin))                            ///
+	(scatter p2 sam2, msymbol(O) msize(medium) mcolor(black))             ///
+	(rcap    ub2 lb2 sam2, lc(black) lw(thin))                            ///
+	(scatter p3 sam3, msymbol(S) msize(medium) mcolor(black))             ///
+	(rcap    ub3 lb3 sam3, lc(black) lw(thin)) if dis == "mood",          ///
+	scheme(s1mono) ylab(0(.2)1, angle(horizontal) grid)                   ///
+	xlab(1.2 "{bf:All}" 2.7 "Male" 3.2 `"" "{bf:Sex}"' 3.7 "Female"       ///
+	     5.2 "Eur" 6.2 "Afr" 7.2 `""A/PI" "{bf:National Origin}"'         ///
+		 8.2 "His"  9.2 "PRi") ytit("predicted probability")              ///
+	legend(order(1 "non-immigrant" 3 "2nd gen immigrant"                  ///
+	             5 "1st gen immigrant") rows(3) ring(0) position(11)      ///
+				 bmargin(2 0 0 2))                                        ///
+	tit("mood disorders", ring(0) position(12)) saving(`g1', replace) 
+
+graph twoway ///
+	(scatter p1 sam1, msymbol(T) msize(medium) mcolor(black))             ///
+	(rcap    ub1 lb1 sam1, lc(black) lw(thin))                            ///
+	(scatter p2 sam2, msymbol(O) msize(medium) mcolor(black))             ///
+	(rcap    ub2 lb2 sam2, lc(black) lw(thin))                            ///
+	(scatter p3 sam3, msymbol(S) msize(medium) mcolor(black))             ///
+	(rcap    ub3 lb3 sam3, lc(black) lw(thin)) if dis == "mood",          ///
+	scheme(s1mono) ylab(0(.2)1, angle(horizontal) grid)                   ///
+	xlab(1.2 "{bf:All}" 2.7 "Male" 3.2 `"" "{bf:Sex}"' 3.7 "Female"       ///
+	     5.2 "Eur" 6.2 "Afr" 7.2 `""A/PI" "{bf:National Origin}"'         ///
+		 8.2 "His"  9.2 "PRi") ytit("predicted probability") legend(off)  ///
+	tit("anxiety disorders", ring(0) position(12)) saving(`g2', replace) 
+	
+graph combine "`g1'" "`g2'", scheme(s1mono) rows(2) imargin(0 0 0 0)
+graph export ~/desktop/imhtrt-fig1.pdf, replace
+restore
 
 
-  
+
 
 *** Analysis 2: acculturation
 
