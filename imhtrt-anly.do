@@ -49,8 +49,11 @@ esttab anx1 anx2 anx30 anx31, eform keep(2.nat 3.nat) nogaps se nonum ///
 
 esttab anx41 anx42 anx43 anx44 anx45, eform keep(2.nat 3.nat) nogaps se ///
   nonum stats(N diff_p) mtit("eu" "af" "as" "hi" "pr") tit("anxiety disorders")
-  
-  
+ 
+
+* figure of predicted probabilities
+
+
   
 
 *** Analysis 2: acculturation
@@ -75,15 +78,7 @@ foreach x in mood anx {
 	qui logit t`x' age i.nat i.fem i.ori i.mar chd edu i.wrk i.ins i.reg ///
 	    i.com sal sas sai [pw = wgt] if `x' & nat > 1, vce(robust)
 	eststo `x'1
-	forval i = 2/4 {
-		forval j = 3/5 {
-			if (`j' > `i') {
-				qui test `i'.ori = `j'.ori
-				qui estadd scalar d`i'`j'_p = r(p)
-			}
-		}
-	}
-	
+
 	qui logit t`x' age i.nat i.fem i.ori i.mar chd edu i.wrk i.ins i.reg ///
 	    i.com sal sas sai c.sai#i.nat [pw = wgt] if `x' & nat > 1, vce(robust)
 	eststo `x'2
@@ -99,13 +94,24 @@ foreach x in mood anx {
 
 esttab mood1 mood2 mood3 mood4, eform nogaps se nonum tit("mood disorders") ///
   keep(sal sas sai 3.nat 1.fem 2.ori 3.ori 4.ori 5.ori 3.nat#c.sai          ///
-  1.fem#c.sai 2.ori#c.sai 3.ori#c.sai 4.ori#c.sai 5.ori#c.sai)              ///
-  scalars(N d23_p d24_p d25_p d34_p d35_p d45_p)
+  1.fem#c.sai 2.ori#c.sai 3.ori#c.sai 4.ori#c.sai 5.ori#c.sai)    
   
 esttab anx1 anx2 anx3 anx4, eform nogaps se nonum tit("anxiety disorders")  ///
   keep(sal sas sai 3.nat 1.fem 2.ori 3.ori 4.ori 5.ori 3.nat#c.sai          ///
-  1.fem#c.sai 2.ori#c.sai 3.ori#c.sai 4.ori#c.sai 5.ori#c.sai)              ///
-  scalars(N d23_p d24_p d25_p d34_p d35_p d45_p)
-
+  1.fem#c.sai 2.ori#c.sai 3.ori#c.sai 4.ori#c.sai 5.ori#c.sai)    
+  
+* p-values for pairwise contrasts between national origins
+foreach x in mood anx {
+	qui logit t`x' age i.nat i.fem i.ori i.mar chd edu i.wrk i.ins i.reg ///
+	    i.com sal sas sai [pw = wgt] if `x' & nat > 1, vce(robust)
+	forval i = 2/4 {
+		forval j = 3/5 {
+			if (`j' > `i') {
+				qui test `i'.ori = `j'.ori
+				dis "`x' origin `i' vs `j':" %7.3f r(p)
+			}
+		}
+	}
+}
 
 
