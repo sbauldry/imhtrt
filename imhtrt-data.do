@@ -226,13 +226,28 @@ lab var com "w1 community type"
 * complex sample variables
 rename (w2weight w2psu w2stratum) (wgt psu str)
 
-* set analysis sample, keep analysis variables, and save data
+
+* set analysis samples, keep analysis variables, and save data
+preserve
+tab mood
+keep if mood
 drop if mi(ori)
 drop if ori == 7
-
-order idnum mde dys man pan pag ago soc spp gad tmde tdys tman tpan tsoc ///
-      tgad mood anx dis tmood tanx tdis nat ori yus al* as* ai* sal sas  ///
-	  sai pd* spd age fem mar chd edu wrk inc ins reg com wgt psu str
+order idnum tmood nat ori yus al* as* ai* pd* sal sas sai spd age fem mar ///
+      chd edu wrk inc ins reg com wgt psu str
 keep idnum-str
+save "~/Documents/Projects/imhtrt/imhtrt-mood-data", replace
+restore
 
-save "~/Documents/Projects/imhtrt/imhtrt-data", replace
+preserve
+tab anx
+keep if anx
+drop if mi(ori)
+drop if ori == 7
+order idnum tanx nat ori yus al* as* ai* pd* sal sas sai spd age fem mar ///
+      chd edu wrk inc ins reg com wgt psu str
+keep idnum-str
+save "~/Documents/Projects/imhtrt/imhtrt-anx-data", replace
+restore
+
+
