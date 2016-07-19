@@ -35,6 +35,30 @@ esttab m3_1 m3_2 m3_3 m3_4 m3_5 using mood2.csv, replace keep(2.nat 3.nat) ///
 
   
   
+* Aim 2: acculturation
+replace yus = age if nat == 2
+corr yus sal sas sai if nat != 1
+
+eststo clear
+logit tmood i.nat yus sal sas sai age i.ori fem i.mar chd edu inc i.wrk ///
+  i.ins i.reg i.com [pw = wgt] if nat != 1, vce(robust)
+eststo m1
+
+logit tmood i.nat yus sal sas sai age fem i.mar chd edu inc i.wrk i.ins ///
+  i.reg i.com [pw = wgt] if ori == 1 & nat != 1, vce(robust)
+eststo m21
+
+logit tmood i.nat yus sal sas sai age fem i.mar chd edu inc i.wrk i.ins ///
+  i.reg i.com [pw = wgt] if ori != 1 & nat != 1, vce(robust)
+eststo m22
+
+
+esttab m1 m21 m22 using mood3.csv, replace nogaps se nonum eform stats(N) ///
+  keep(2.nat 3.nat sal sas sai yus) b(%5.2f) se(%5.2f) 
+
+  
+  
+  
 
 *** Anxiety disorder analysis
 use "~/Documents/Projects/imhtrt/imhtrt-anx-data", replace
@@ -70,6 +94,26 @@ esttab m3_1 m3_2 m3_3 m3_4 m3_5 using anx2.csv, replace keep(2.nat 3.nat) ///
 
 
   
+* Aim 2: acculturation
+replace yus = age if nat == 2
+corr yus sal sas sai if nat != 1
+
+eststo clear
+logit tanx i.nat yus sal sas sai age i.ori fem i.mar chd edu inc i.wrk ///
+  i.ins i.reg i.com [pw = wgt] if nat != 1, vce(robust)
+eststo m1
+
+logit tanx i.nat yus sal sas sai age fem i.mar chd edu inc i.wrk i.ins ///
+  i.reg i.com [pw = wgt] if ori == 1 & nat != 1, vce(robust)
+eststo m21
+
+logit tanx i.nat yus sal sas sai age fem i.mar chd edu inc i.wrk i.ins ///
+  i.reg i.com [pw = wgt] if ori != 1 & nat != 1, vce(robust)
+eststo m22
+
+
+esttab m1 m21 m22 using anx3.csv, replace nogaps se nonum eform stats(N) ///
+  keep(2.nat 3.nat sal sas sai yus) b(%5.2f) se(%5.2f)   
   
 
   
