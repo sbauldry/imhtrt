@@ -165,8 +165,8 @@ use `pp', replace
 
 recode ori (. = 0)
 
-replace p = . if ori == 3 & nat == 2
-replace v = . if ori == 3 & nat == 2
+drop if ori == 3 | ori == 5
+replace ori = 3 if ori == 4
 
 gen ub = p + 1.96*sqrt(v)
 gen lb = p - 1.96*sqrt(v)
@@ -193,8 +193,8 @@ graph twoway ///
 	(rcap    ub3 lb3 ori3, lc(black) lw(thin)) if dis == "mood",      ///
 	scheme(s1mono) ylab(0(.2)1, angle(horizontal) grid)               ///
 	ytit("predicted probability")                                     ///
-	xlab(0.2 "{bf:All}" 1.2 "Eur" 2.2 "Afr" 4.2 "His" 5.2 "PRi"       ///
-	     3.2 `""A/PI" "{bf:Racial-Ethnic Origin}"')                   ///
+	xlab(0.2 "{bf:All}" 1.2 "Eur" 3.2 "His"                           ///
+	     2.2 `""Afr" "{bf:Racial-Ethnic Origin}"')                    ///
 	legend(order(1 "non-immigrant" 3 "2nd gen immigrant"              ///
 	             5 "1st gen immigrant") rows(3) ring(0) position(11)  ///
 		   bmargin(2 0 0 2))                                          ///
@@ -208,12 +208,12 @@ graph twoway ///
 	(scatter p3 ori3, msymbol(S) msize(medium) mcolor(black))         ///
 	(rcap    ub3 lb3 ori3, lc(black) lw(thin)) if dis == "anx",       ///
 	scheme(s1mono) ylab(0(.2)1, angle(horizontal) grid)               ///
-	xlab(0.2 "{bf:All}" 1.2 "Eur" 2.2 "Afr" 4.2 "His" 5.2 "PRi"       ///
-	     3.2 `""A/PI" "{bf:Racial-Ethnic Origin}"')                   ///
+	xlab(0.2 "{bf:All}" 1.2 "Eur" 3.2 "His"                           ///
+	     2.2 `""Afr" "{bf:Racial-Ethnic Origin}"')                    ///
 	legend(off) tit("anxiety disorders") saving(`g2', replace) 
 
 graph combine "`g1'" "`g2'", scheme(s1mono) rows(1) imargin(0 0 0 0)
-graph export imhtrt-fig1.pdf, replace	
+graph export ~/desktop/imhtrt-fig1.pdf, replace	
 	
 	
 	

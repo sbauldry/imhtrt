@@ -7,7 +7,7 @@
 use "~/Documents/Projects/imhtrt/imhtrt-mood-data", replace
 
 * Distribution of treatment
-tab tmood
+tab tmood nat, col
 
 * Joint distribution of nativity and origin
 tab ori nat
@@ -26,6 +26,10 @@ alpha al* if nat == 2
 alpha as* if nat == 2
 alpha ai* if nat == 2
 restore
+
+* Acculturation measures by origin
+sum yus sal sas sai if ori == 1 & nat != 1
+sum yus sal sas sai if ori != 1 & nat != 1
 
 * Other covariates
 foreach x of varlist mar reg com wrk ins {
@@ -39,7 +43,7 @@ sum age fem mar1-mar4 chd reg1-reg4 com1-com3 edu wrk1-wrk3 inc ins1-ins4
 use "~/Documents/Projects/imhtrt/imhtrt-anx-data", replace
 
 * Distribution of treatment
-tab tanx
+tab tanx nat, col
 
 * Joint distribution of nativity and origin
 tab ori nat
@@ -58,6 +62,10 @@ alpha al* if nat == 2
 alpha as* if nat == 2
 alpha ai* if nat == 2
 restore
+
+* Acculturation measures by origin
+sum yus sal sas sai if ori == 1 & nat != 1
+sum yus sal sas sai if ori != 1 & nat != 1
 
 * Other covariates
 foreach x of varlist mar reg com wrk ins {
